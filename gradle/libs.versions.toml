@@ -6,7 +6,7 @@ compile_sdk = "35"
 version_code = "33"
 version_name = "3.1"
 
-agp = "8.8.1"
+agp = "8.8.2"
 kotlin = "2.1.10"
 compose = "1.7.8"
 
@@ -31,6 +31,6 @@ compose-ui-tooling-preview = { module = "androidx.compose.ui:ui-tooling-preview"
 
 # AndroidX
 androidx-core-ktx = "androidx.core:core-ktx:1.15.0"
-activity-compose = "androidx.activity:activity-compose:1.10.0"
+activity-compose = "androidx.activity:activity-compose:1.10.1"
 startup-runtime = "androidx.startup:startup-runtime:1.2.0"
 
