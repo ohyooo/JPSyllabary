@@ -6,8 +6,8 @@ compile_sdk = "35"
 version_code = "33"
 version_name = "3.1"
 
-agp = "8.10.1"
-kotlin = "2.1.21"
+agp = "8.11.0"
+kotlin = "2.2.0"
 compose = "1.8.3"
 
 [plugins]
