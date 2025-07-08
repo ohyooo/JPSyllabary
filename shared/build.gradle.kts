@@ -17,7 +17,7 @@ kotlin {
     androidTarget()
     jvm("desktop")
     wasmJs {
-        moduleName = "shared"
+        outputModuleName = "shared"
         browser {
             commonWebpackConfig {
                 outputFileName = "shared.js"
