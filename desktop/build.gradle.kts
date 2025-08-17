@@ -10,9 +10,7 @@ group = "com.ohyooo"
 version = "1.0.0"
 
 kotlin {
-    jvm {
-        withJava()
-    }
+    jvm {}
     sourceSets {
         val commonMain by getting {
             dependencies {
