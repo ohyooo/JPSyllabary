@@ -6,7 +6,7 @@ compile_sdk = "36"
 version_code = "33"
 version_name = "3.1"
 
-agp = "8.12.1"
+agp = "8.12.2"
 kotlin = "2.2.10"
 compose = "1.9.0"
 
