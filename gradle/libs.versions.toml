@@ -7,7 +7,7 @@ version_code = "33"
 version_name = "3.1"
 
 agp = "8.13.2"
-kotlin = "2.2.21"
+kotlin = "2.3.0"
 compose = "1.10.0"
 
 [plugins]
@@ -16,7 +16,7 @@ alp = { id = "com.android.library", version.ref = "agp" }
 kgp = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
 ks = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
 kmm = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }
-jc = { id = "org.jetbrains.compose", version = "1.10.0-rc02" }
+jc = { id = "org.jetbrains.compose", version = "1.11.0-alpha01" }
 cc = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
 
 [libraries]
