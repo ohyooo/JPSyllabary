@@ -1,6 +1,5 @@
 @file:OptIn(org.jetbrains.kotlin.gradle.ExperimentalWasmDsl::class)
 
-import com.android.kotlin.multiplatform.ide.models.serialization.androidSourceSetKey
 import org.jetbrains.kotlin.gradle.targets.js.webpack.KotlinWebpackConfig
 
 plugins {
@@ -81,5 +80,4 @@ kotlin {
     }
 }
 
-
-task("testClasses")
+tasks.register("testClasses")
