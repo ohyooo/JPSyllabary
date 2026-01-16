@@ -14,7 +14,28 @@ group = "com.ohyooo"
 version = "1.0.0"
 
 kotlin {
-    androidTarget()
+    androidLibrary {
+        namespace = "com.ohyooo.jpsyllabary.shared"
+        compileSdk = libs.versions.compile.sdk.get().toInt()
+        minSdk = libs.versions.min.sdk.get().toInt()
+
+        packaging {
+            resources {
+                excludes += "/META-INF/{AL2.0,LGPL2.1}"
+            }
+        }
+        withJava()
+        compilerOptions {
+            jvmTarget.set(
+                org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_21
+            )
+        }
+//        compileOptions {
+//            sourceCompatibility = JavaVersion.VERSION_21
+//            targetCompatibility = JavaVersion.VERSION_21
+//        }
+    }
+
     jvm("desktop")
     wasmJs {
         outputModuleName = "shared"
@@ -48,9 +69,10 @@ kotlin {
         val androidMain by getting {
             dependencies {
                 api(libs.androidx.core.ktx)
-                api(libs.startup.runtime)
+                api(libs.androidx.startup.runtime)
                 implementation(libs.compose.ui.tooling.preview)
-                implementation(libs.activity.compose)
+                implementation(libs.androidx.activity.compose)
+                compileOnly(libs.compose.ui.tooling)
             }
         }
         val desktopMain by getting {
@@ -59,30 +81,6 @@ kotlin {
                 api(compose.preview)
             }
         }
-    }
-}
-
-
-android {
-    namespace = "com.ohyooo.jpsyllabary.shared"
-    compileSdk = libs.versions.compile.sdk.get().toInt()
-    sourceSets["main"].manifest.srcFile("src/androidMain/AndroidManifest.xml")
-    sourceSets["main"].res.srcDirs("src/androidMain/res")
-    sourceSets["main"].resources.srcDirs("src/commonMain/resources")
-    defaultConfig {
-        minSdk = libs.versions.min.sdk.get().toInt()
-    }
-    packaging {
-        resources {
-            excludes += "/META-INF/{AL2.0,LGPL2.1}"
-        }
-    }
-    compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_21
-        targetCompatibility = JavaVersion.VERSION_21
-    }
-    dependencies {
-        debugImplementation(libs.compose.ui.tooling)
     }
 }
 

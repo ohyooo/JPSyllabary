@@ -2,7 +2,6 @@
 
 plugins {
     alias(libs.plugins.agp)
-    alias(libs.plugins.kgp)
     alias(libs.plugins.jc)
     alias(libs.plugins.cc)
 }
@@ -17,7 +16,7 @@ repositories {
 
 dependencies {
     implementation(project(":shared"))
-    implementation(libs.activity.compose)
+    implementation(libs.androidx.activity.compose)
 }
 
 android {
@@ -35,11 +34,11 @@ android {
     namespace = "com.ohyooo.jpsyllabary"
     compileSdk = libs.versions.compile.sdk.get().toInt()
     defaultConfig {
-        applicationId = libs.versions.application.id.get()
+        applicationId = "com.ohyooo.jpsyllabary"
         minSdk = libs.versions.min.sdk.get().toInt()
         targetSdk = libs.versions.target.sdk.get().toInt()
-        versionCode = libs.versions.version.code.get().toInt()
-        versionName = libs.versions.version.name.get() + rootProject.extra["gitVersion"]
+        versionCode = 33
+        versionName = "3.1"
         proguardFile("proguard-rules.pro")
         signingConfig = signingConfigs.getByName("debug")
     }
