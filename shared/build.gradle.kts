@@ -1,5 +1,6 @@
 @file:OptIn(org.jetbrains.kotlin.gradle.ExperimentalWasmDsl::class)
 
+import com.android.kotlin.multiplatform.ide.models.serialization.androidSourceSetKey
 import org.jetbrains.kotlin.gradle.targets.js.webpack.KotlinWebpackConfig
 
 plugins {
@@ -30,10 +31,9 @@ kotlin {
                 org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_21
             )
         }
-//        compileOptions {
-//            sourceCompatibility = JavaVersion.VERSION_21
-//            targetCompatibility = JavaVersion.VERSION_21
-//        }
+        androidResources{
+            enable = true
+        }
     }
 
     jvm("desktop")
@@ -43,10 +43,7 @@ kotlin {
             commonWebpackConfig {
                 outputFileName = "shared.js"
                 devServer = (devServer ?: KotlinWebpackConfig.DevServer()).apply {
-                    static = (static ?: mutableListOf()).apply {
-                        // Serve sources to debug inside browser
-                        add(project.projectDir.path)
-                    }
+                    static(project.projectDir.path, true)
                 }
             }
         }
