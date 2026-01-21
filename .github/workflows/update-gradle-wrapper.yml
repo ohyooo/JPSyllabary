@@ -27,6 +27,7 @@ jobs:
         with:
           repo-token: ${{ secrets.ACTIONS_TRIGGER_PAT }}
           merge-method: SQUASH
+          persist-credentials: false
 
       - name: Enable auto-merge for the PR (squash)
         env:
