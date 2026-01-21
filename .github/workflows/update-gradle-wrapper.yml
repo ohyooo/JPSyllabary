@@ -13,6 +13,7 @@ jobs:
       - uses: actions/checkout@main
         with:
           submodules: recursive
+          persist-credentials: false
 
       - name: Setup JDK
         uses: actions/setup-java@main
@@ -27,7 +28,6 @@ jobs:
         with:
           repo-token: ${{ secrets.ACTIONS_TRIGGER_PAT }}
           merge-method: SQUASH
-          persist-credentials: false
 
       - name: Enable auto-merge for the PR (squash)
         env:
