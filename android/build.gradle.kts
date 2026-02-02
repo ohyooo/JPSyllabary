@@ -32,7 +32,12 @@ android {
         }
     }
     namespace = "com.ohyooo.jpsyllabary"
-    compileSdk = libs.versions.compile.sdk.get().toInt()
+
+    compileSdk {
+        version = release(libs.versions.compile.sdk.get().toInt()) {
+            minorApiLevel = libs.versions.compile.minor.get().toInt()
+        }
+    }
     defaultConfig {
         applicationId = "com.ohyooo.jpsyllabary"
         minSdk = libs.versions.min.sdk.get().toInt()
