@@ -20,13 +20,6 @@ jobs:
       - uses: actions/checkout@main
         with:
           submodules: recursive
-
-      - name: Get Time
-        id: time
-        uses: nanzm/get-time-action@master
-        with:
-          timeZone: 8
-          format: 'YYYYMMDDHHmmss'
      
       - name: Setup JDK
         uses: actions/setup-java@main
@@ -35,18 +28,15 @@ jobs:
           java-version: '21'
           java-package: jdk
           cache: 'gradle'
-          
-      - name: Grant execute permission for gradlew
-        run: chmod +x gradlew
 
       - name: Build APK
-        run: ./gradlew :android:assembleRelease
+        run: chmod +x gradlew && ./gradlew :android:assembleRelease
 
       - name: Upload to artifact
         uses: actions/upload-artifact@v6
         continue-on-error: true
         with:
-          name: ${{ github.ref }}_${{ steps.time.outputs.time }}
+          name: apk
           path: android/build/outputs/apk/release/*.apk
 
       # - name: Upload to release
@@ -73,3 +63,4 @@ jobs:
         with:
           retain_days: 3
           keep_minimum_runs: 2
+
