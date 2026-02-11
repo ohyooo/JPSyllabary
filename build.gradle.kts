@@ -35,6 +35,7 @@ allprojects {
             jvmTarget.set(JvmTarget.JVM_21)
             freeCompilerArgs.addAll(
                 listOf(
+                    "-Xbackend-threads=4",
                     "-Xcontext-parameters", 
                     "-jvm-target=21",
                     "-Xreturn-value-checker=full",
@@ -68,5 +69,6 @@ abstract class GitVersionValueSource : ValueSource<String, ValueSourceParameters
 
 val gitVersion = providers.of(GitVersionValueSource::class.java) {}.get()
 extra["gitVersion"] = gitVersion
+
 
 
