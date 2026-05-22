@@ -49,15 +49,28 @@ kotlin {
         binaries.executable()
     }
     sourceSets {
+        val osName = System.getProperty("os.name").lowercase()
+        val osArch = System.getProperty("os.arch").lowercase()
+        val isArm64 = osArch == "aarch64" || osArch == "arm64"
+        val composeDesktopCurrentOs = when {
+            "mac" in osName && isArm64 -> libs.compose.desktop.jvm.macos.arm64
+            "mac" in osName -> libs.compose.desktop.jvm.macos.x64
+            "linux" in osName && isArm64 -> libs.compose.desktop.jvm.linux.arm64
+            "linux" in osName -> libs.compose.desktop.jvm.linux.x64
+            "win" in osName -> libs.compose.desktop.jvm.windows.x64
+            else -> error("Unsupported desktop target: $osName/$osArch")
+        }
+
         val commonMain by getting {
             dependencies {
-                api(compose.ui)
-                api(compose.runtime)
-                api(compose.foundation)
-                api(compose.material)
-                api(compose.material3)
-                api(compose.materialIconsExtended)
-                implementation(compose.components.resources)
+                api(libs.compose.ui)
+                api(libs.compose.runtime)
+                api(libs.compose.foundation)
+                api(libs.compose.material)
+                api(libs.compose.material3)
+                api(libs.compose.material.icons.extended)
+                implementation(libs.compose.ui.tooling.preview)
+                implementation(libs.compose.components.resources)
                 implementation(libs.kotlinx.coroutines.core)
                 implementation(libs.kotlinx.serialization.core)
             }
@@ -68,13 +81,12 @@ kotlin {
                 api(libs.androidx.startup.runtime)
                 implementation(libs.compose.ui.tooling.preview)
                 implementation(libs.androidx.activity.compose)
-                compileOnly(libs.compose.ui.tooling)
+                implementation(libs.compose.ui.tooling)
             }
         }
         val desktopMain by getting {
             dependencies {
-                implementation(compose.desktop.currentOs)
-                api(compose.preview)
+                implementation(composeDesktopCurrentOs)
             }
         }
     }

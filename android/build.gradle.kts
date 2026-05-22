@@ -17,6 +17,7 @@ repositories {
 dependencies {
     implementation(project(":shared"))
     implementation(libs.androidx.activity.compose)
+    debugImplementation(libs.compose.ui.tooling)
 }
 
 android {

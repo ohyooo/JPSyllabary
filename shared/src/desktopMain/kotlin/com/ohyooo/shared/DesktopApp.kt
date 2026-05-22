@@ -1,11 +1,11 @@
 package com.ohyooo.shared
 
 import App
-import androidx.compose.desktop.ui.tooling.preview.Preview
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.tooling.preview.Preview
 
 @Preview
 @Composable
-fun AppPreview() {
+private fun AppPreview() {
     App()
 }
