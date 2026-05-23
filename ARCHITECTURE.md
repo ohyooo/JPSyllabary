@@ -18,6 +18,48 @@
 User action -> Intent -> Store.dispatch() -> Store.reduce() -> UiState -> Compose render
 ```
 
+```mermaid
+flowchart LR
+    User[User action] --> UI[Composable UI]
+    UI -->|dispatch Intent| Store[Screen Store]
+    Store -->|reduce Intent| State[UiState]
+    State -->|StateFlow| UI
+
+    Store -. optional async work .-> Scope[storeScope]
+    Scope -. setState .-> State
+```
+
+## 模块关系
+
+```mermaid
+flowchart TB
+    Platform[Android / Desktop / iOS / Wasm launchers] --> App[App.kt]
+    App --> Theme[AppTheme]
+    Theme --> Main[compose/nav.kt Main]
+
+    Main --> AppStore[AppStore]
+    AppStore --> Route[Route]
+    Main --> Nav[Nav]
+
+    Nav --> SingleUI[Single.kt]
+    Nav --> TableUI[Table.kt]
+    Nav --> TwisterUI[TongueTwister.kt]
+    Nav --> GithubUI[Github.kt]
+
+    SingleUI --> SingleStore[SingleStore]
+    TableUI --> TableStore[TableStore]
+    TwisterUI --> TwisterStore[TwisterStore]
+
+    SingleStore --> MviStore[MviStore]
+    TableStore --> MviStore
+    TwisterStore --> MviStore
+    AppStore --> MviStore
+
+    SingleStore --> Chars[chars.kt]
+    TableStore --> Chars
+    TwisterUI --> Chars
+```
+
 ## 架构文件
 
 `shared/src/commonMain/kotlin/App.kt`
@@ -76,6 +118,17 @@ MVI 基类。提供 `StateFlow` 状态暴露、`dispatch(intent)` 入口、`setS
 4. 用 `val uiState by store.state.collectAsState()` 订阅状态。
 5. 所有用户操作调用 `store.dispatch(XxxIntent...)`。
 6. 在 `nav.kt` 的 `Nav()` 中按 route 渲染新页面。
+
+```mermaid
+flowchart TD
+    A[Add Route enum item] --> B[Create XxxUiState]
+    B --> C[Create XxxIntent]
+    C --> D[Create XxxStore extends MviStore]
+    D --> E[Create Composable screen]
+    E --> F[remember store + collectAsState]
+    F --> G[Dispatch intents from user actions]
+    G --> H[Render screen in Nav]
+```
 
 ## 维护约定
 
