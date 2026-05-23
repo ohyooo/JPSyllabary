@@ -2,11 +2,54 @@ package com.ohyooo.shared.viewmodel
 
 import com.ohyooo.shared.generated.resources.Res
 import com.ohyooo.shared.generated.resources.*
+import com.ohyooo.shared.mvi.MviStore
 import org.jetbrains.compose.resources.StringResource
 
-object SingleViewModel {
+/**
+ * State rendered by the single-character training page.
+ *
+ * The UI reads this state only. It requests changes by dispatching [SingleIntent]
+ * to [SingleStore].
+ */
+data class SingleUiState(
+    val type: StringResource = Res.string.katakanaWithVoiceless,
+    val character: String = "あ",
+    val hint: String = "a",
+    val isHintVisible: Boolean = false,
+)
+
+/**
+ * User actions supported by the single-character page.
+ */
+sealed interface SingleIntent {
+    /**
+     * Requests a new random kana card and hides the current hint.
+     */
+    data object Next : SingleIntent
+
+    /**
+     * Toggles the romaji hint for the current kana card.
+     */
+    data object ToggleHint : SingleIntent
+}
+
+/**
+ * MVI store for the single-character training page.
+ *
+ * It owns kana selection, hint visibility, and type labels. Composables should
+ * call [dispatch] instead of changing those values locally.
+ */
+class SingleStore : MviStore<SingleUiState, SingleIntent>(SingleUiState()) {
+    /**
+     * Recently generated indexes. Increase [queueSize] to avoid showing recently
+     * seen kana again within that window.
+     */
     private var tvQueue = ArrayList<Int>()
     private var queueSize = 0
+
+    /**
+     * Kana-to-romaji dictionary used to generate the next training card.
+     */
     private val dicts = arrayOf(
         "あ" to "a",
         "い" to "i",
@@ -151,6 +194,35 @@ object SingleViewModel {
     )
     private val count by lazy(LazyThreadSafetyMode.NONE) { dicts.size }
 
+    /**
+     * Converts a page intent into the next [SingleUiState].
+     */
+    override fun reduce(intent: SingleIntent) {
+        when (intent) {
+            SingleIntent.Next -> showNext()
+            SingleIntent.ToggleHint -> setState { it.copy(isHintVisible = !it.isHintVisible) }
+        }
+    }
+
+    /**
+     * Selects the next model and publishes it as UI state.
+     */
+    private fun showNext() {
+        val model = nextModel()
+        setState {
+            it.copy(
+                type = model.title,
+                character = model.kana,
+                hint = model.pron,
+                isHintVisible = false,
+            )
+        }
+    }
+
+    /**
+     * Maps a dictionary index to the localized kana group label shown above the
+     * character.
+     */
     private fun getType(name: Int) = when (name) {
         in 0..44 -> Res.string.katakanaWithVoiceless
         in 45..89 -> Res.string.hiraganaWithVoiceless
@@ -161,7 +233,10 @@ object SingleViewModel {
         else -> Res.string.empty
     }
 
-    fun get(): SingleModel {
+    /**
+     * Builds the next random training card from [dicts].
+     */
+    private fun nextModel(): SingleModel {
         val random = num
         val value = dicts[random]
         val kanaValue = value.first
@@ -170,8 +245,12 @@ object SingleViewModel {
         return SingleModel(title, kanaValue, pronValue)
     }
 
-    // 用队列
-    // 生成随机数
+    /**
+     * Generates a random dictionary index.
+     *
+     * The queue hook is retained so the store can avoid recent repeats by raising
+     * [queueSize] without changing the UI contract.
+     */
     private val num: Int
         get() {
             var num: Int
@@ -194,7 +273,10 @@ object SingleViewModel {
         }
 }
 
-class SingleModel(
+/**
+ * Internal domain model for one generated single-character card.
+ */
+private data class SingleModel(
     val title: StringResource,
     val kana: String,
     val pron: String,

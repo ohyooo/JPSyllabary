@@ -13,26 +13,34 @@ import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material.Icon
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Menu
-import androidx.compose.material3.Divider
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.ohyooo.shared.model.twisterList
-import kotlinx.coroutines.launch
+import com.ohyooo.shared.viewmodel.TwisterIntent
+import com.ohyooo.shared.viewmodel.TwisterStore
 
+/**
+ * Tongue-twister training screen.
+ *
+ * The screen observes [TwisterStore.state]. Pressing the primary button dispatches
+ * [TwisterIntent.Reset], and each pager reacts to the store's reset signal.
+ */
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-fun Twister(onMenuClick: () -> Unit = {}) {
+fun Twister(onMenuClick: () -> Unit = {}, store: TwisterStore = rememberTwisterStore()) {
+    val uiState by store.state.collectAsState()
+
     Column {
         Icon(
             imageVector = Icons.Default.Menu,
@@ -45,11 +53,7 @@ fun Twister(onMenuClick: () -> Unit = {}) {
             tint = MaterialTheme.colorScheme.inverseSurface
         )
 
-        var reset by rememberSaveable { mutableStateOf(0L) }
-
         HorizontalDivider()
-
-        val scope = rememberCoroutineScope()
 
         repeat(twisterList.size) { column ->
             val state = rememberPagerState(
@@ -57,8 +61,10 @@ fun Twister(onMenuClick: () -> Unit = {}) {
                 initialPageOffsetFraction = 0f,
                 pageCount = { twisterList[column].size },
             )
-            if (reset > 0L) {
-                scope.launch { state.animateScrollToPage(0) }
+            LaunchedEffect(uiState.resetRequest) {
+                if (uiState.resetRequest > 0L) {
+                    state.animateScrollToPage(0)
+                }
             }
             HorizontalPager(
                 state = state,
@@ -91,7 +97,20 @@ fun Twister(onMenuClick: () -> Unit = {}) {
             HorizontalDivider()
         }
         ClickButton(modifier = Modifier.weight(4F)) {
-            reset++
+            store.dispatch(TwisterIntent.Reset)
         }
     }
+}
+
+/**
+ * Creates the tongue-twister store and closes it when the screen leaves
+ * composition.
+ */
+@Composable
+private fun rememberTwisterStore(): TwisterStore {
+    val store = remember { TwisterStore() }
+    DisposableEffect(store) {
+        onDispose { store.close() }
+    }
+    return store
 }

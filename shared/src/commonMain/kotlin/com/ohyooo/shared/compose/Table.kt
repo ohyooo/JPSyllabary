@@ -30,12 +30,12 @@ import androidx.compose.material.icons.rounded.Add
 import androidx.compose.material.icons.rounded.Refresh
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -52,28 +52,36 @@ import com.ohyooo.shared.generated.resources.Res
 import com.ohyooo.shared.generated.resources.*
 import com.ohyooo.shared.model.hiragana
 import com.ohyooo.shared.model.katakana
-import com.ohyooo.shared.model.normalSequence
-import com.ohyooo.shared.model.order
 import com.ohyooo.shared.model.romaji
-import com.ohyooo.shared.model.shuffle
 import com.ohyooo.shared.model.sonant
 import com.ohyooo.shared.model.sonantRomaji
-import com.ohyooo.shared.model.sonantSequence
+import com.ohyooo.shared.viewmodel.RomajiSource
+import com.ohyooo.shared.viewmodel.TableCellKey
+import com.ohyooo.shared.viewmodel.TableIntent
+import com.ohyooo.shared.viewmodel.TableStore
+import com.ohyooo.shared.viewmodel.TableUiState
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.stringResource
 import kotlin.math.roundToInt
 
+/**
+ * Kana table screen.
+ *
+ * It observes [TableStore.state] and dispatches [TableIntent] for tab changes,
+ * cell reveals, ordering actions, and floating-action-button movement.
+ */
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-fun Fragment(onMenuClick: () -> Unit = {}) {
+fun Fragment(onMenuClick: () -> Unit = {}, store: TableStore = rememberTableStore()) {
+    val uiState by store.state.collectAsState()
     val scope = rememberCoroutineScope()
 
     val pagerState = rememberPagerState(0, pageCount = { tabList.size })
 
-    var nSequence by rememberSaveable { mutableStateOf(normalSequence) }
-    var sSequence by rememberSaveable { mutableStateOf(sonantSequence) }
+    LaunchedEffect(pagerState.currentPage) {
+        store.dispatch(TableIntent.PageChanged(pagerState.currentPage))
+    }
 
     Box {
         Column {
@@ -90,35 +98,49 @@ fun Fragment(onMenuClick: () -> Unit = {}) {
                     Icon(imageVector = Icons.Default.Menu, contentDescription = "menu", tint = MaterialTheme.colorScheme.inverseSurface)
                 }
 
-                Tab(pagerState, scope)
+                Tab(selectedPage = uiState.selectedPage, pagerState = pagerState, scope = scope)
             }
 
             HorizontalPager(state = pagerState, modifier = Modifier.weight(1F)) { page ->
-                Table(page = page, currentPage = pagerState.currentPage, scope = scope, nSequence = nSequence, sSequence = sSequence)
+                Table(page = page, uiState = uiState, dispatch = store::dispatch)
             }
         }
 
-        Button {
-            nSequence = normalSequence.copyOf()
-            sSequence = sonantSequence.copyOf()
-        }
+        TableFab(uiState = uiState, dispatch = store::dispatch)
     }
+}
+
+/**
+ * Creates the table store for this screen instance and closes it when the screen
+ * leaves composition.
+ */
+@Composable
+private fun rememberTableStore(): TableStore {
+    val store = remember { TableStore() }
+    DisposableEffect(store) {
+        onDispose { store.close() }
+    }
+    return store
 }
 
 private val tabList = listOf(Res.string.hiragana, Res.string.katakana, Res.string.romaji, Res.string.sonant)
 
+/**
+ * Renders the four table tabs and scrolls the pager when a tab is selected.
+ *
+ * [selectedPage] comes from [TableUiState] so the selected tab reflects store
+ * state rather than local UI state.
+ */
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-private fun Tab(pagerState: PagerState, scope: CoroutineScope) {
-    val tabIndex = pagerState.currentPage
-
+private fun Tab(selectedPage: Int, pagerState: PagerState, scope: CoroutineScope) {
     TabRow(
-        selectedTabIndex = tabIndex,
+        selectedTabIndex = selectedPage,
         backgroundColor = MaterialTheme.colorScheme.surfaceVariant
     ) {
         tabList.forEachIndexed { index, stringRes ->
             Tab(
-                selected = tabIndex == index,
+                selected = selectedPage == index,
                 onClick = { scope.launch { pagerState.scrollToPage(index) } },
                 text = {
                     AutoResizeText(
@@ -134,59 +156,96 @@ private fun Tab(pagerState: PagerState, scope: CoroutineScope) {
     }
 }
 
+/**
+ * Chooses which grid data to render for one pager page.
+ *
+ * The romaji page reuses [TableUiState.romajiSource] so it follows the last
+ * normal or sonant table selected by the user.
+ */
 @Composable
-private fun Table(page: Int, currentPage: Int, scope: CoroutineScope, nSequence: IntArray, sSequence: IntArray) {
-    var isSnoat by rememberSaveable { mutableStateOf(false) }
-
+private fun Table(page: Int, uiState: TableUiState, dispatch: (TableIntent) -> Unit) {
     when (page) {
-        0 -> Table(chars = hiragana.asList(), hints = romaji.asList(), nSequence, scope)
-        1 -> Table(chars = katakana.asList(), hints = romaji.asList(), nSequence, scope)
-        3 -> Table(chars = sonant.asList(), hints = sonantRomaji.asList(), sSequence, scope)
+        0 -> TableGrid(
+            page = page,
+            source = RomajiSource.NORMAL,
+            chars = hiragana.asList(),
+            hints = romaji.asList(),
+            sequence = uiState.normalSequence,
+            revealedCells = uiState.revealedCells,
+            dispatch = dispatch,
+        )
+
+        1 -> TableGrid(
+            page = page,
+            source = RomajiSource.NORMAL,
+            chars = katakana.asList(),
+            hints = romaji.asList(),
+            sequence = uiState.normalSequence,
+            revealedCells = uiState.revealedCells,
+            dispatch = dispatch,
+        )
+
+        3 -> TableGrid(
+            page = page,
+            source = RomajiSource.SONANT,
+            chars = sonant.asList(),
+            hints = sonantRomaji.asList(),
+            sequence = uiState.sonantSequence,
+            revealedCells = uiState.revealedCells,
+            dispatch = dispatch,
+        )
+
         2 -> {
-            when (currentPage) {
-                1 -> {
-                    isSnoat = false
-                    Table(romaji.asList(), romaji.asList(), nSequence, scope)
-                }
-
-                3 -> {
-                    isSnoat = true
-                    Table(sonantRomaji.asList(), sonantRomaji.asList(), nSequence, scope)
-                }
-
-                2 -> {
-                    val chars = if (isSnoat) sonantRomaji else romaji
-                    Table(chars.asList(), chars.asList(), if (isSnoat) sSequence else nSequence, scope)
-                }
-            }
+            val isSonant = uiState.romajiSource == RomajiSource.SONANT
+            val chars = if (isSonant) sonantRomaji else romaji
+            TableGrid(
+                page = page,
+                source = uiState.romajiSource,
+                chars = chars.asList(),
+                hints = chars.asList(),
+                sequence = if (isSonant) uiState.sonantSequence else uiState.normalSequence,
+                revealedCells = uiState.revealedCells,
+                dispatch = dispatch,
+            )
         }
     }
 }
 
+/**
+ * Renders a grid of kana or romaji cells.
+ *
+ * Cell click events dispatch [TableIntent.RevealCell]. The store decides how long
+ * the hint remains visible.
+ */
 @Composable
-private fun Table(chars: List<String>, hints: List<String>, sequence: IntArray, scope: CoroutineScope) {
+private fun TableGrid(
+    page: Int,
+    source: RomajiSource,
+    chars: List<String>,
+    hints: List<String>,
+    sequence: List<Int>,
+    revealedCells: Set<TableCellKey>,
+    dispatch: (TableIntent) -> Unit,
+) {
     LazyColumn(
         modifier = Modifier
             .fillMaxSize()
             .padding(1.dp)
     ) {
-        sequence.asList().chunked(5).forEachIndexed { _, fragment ->
+        sequence.chunked(5).forEachIndexed { _, fragment ->
             item {
                 Row(modifier = Modifier.fillMaxWidth()) {
                     fragment.forEachIndexed { _, index ->
                         val alphabet = chars[index]
-                        var char by remember(alphabet) { mutableStateOf(alphabet) }
+                        val key = TableCellKey(page = page, index = index, source = source)
+                        val char = if (key in revealedCells) hints[index] else alphabet
                         Box(
                             modifier = Modifier
                                 .weight(1F)
                                 .aspectRatio(1F)
                                 .border(width = 0.25.dp, color = Color.DarkGray)
                                 .clickable {
-                                    scope.launch {
-                                        char = hints[index]
-                                        delay(1000)
-                                        char = alphabet
-                                    }
+                                    dispatch(TableIntent.RevealCell(key))
                                 },
                             contentAlignment = Alignment.Center
                         ) {
@@ -205,23 +264,30 @@ private fun Table(chars: List<String>, hints: List<String>, sequence: IntArray, 
     }
 }
 
+/**
+ * Floating action button for ordering controls.
+ *
+ * Expansion, drag offset, and order actions are stored in [TableUiState] through
+ * [TableIntent] instead of local mutable state.
+ */
 @Composable
-fun BoxScope.Button(onClick: (Long) -> Unit) {
-    var toState by rememberSaveable { mutableStateOf(MultiFabState.COLLAPSED) }
-
-    var offsetX by rememberSaveable { mutableStateOf(0F) }
-    var offsetY by rememberSaveable { mutableStateOf(0F) }
+private fun BoxScope.TableFab(uiState: TableUiState, dispatch: (TableIntent) -> Unit) {
+    val toState = if (uiState.isFabExpanded) {
+        MultiFabState.EXPANDED
+    } else {
+        MultiFabState.COLLAPSED
+    }
 
     val draggableStateX = rememberDraggableState {
-        offsetX += it
+        dispatch(TableIntent.DragFab(deltaX = it))
     }
     val draggableStateY = rememberDraggableState {
-        offsetY += it
+        dispatch(TableIntent.DragFab(deltaY = it))
     }
 
     MultiFloatingActionButton(
         fabIcon = Icons.Rounded.Add,
-        items = if (toState == MultiFabState.EXPANDED) {
+        items = if (uiState.isFabExpanded) {
             listOf(
                 MultiFabItem(Icons.Rounded.Refresh, "Shuffle"),
                 MultiFabItem(Icons.AutoMirrored.Rounded.List, "Order")
@@ -229,12 +295,12 @@ fun BoxScope.Button(onClick: (Long) -> Unit) {
         } else emptyList(),
         toState = toState,
         showLabels = false,
-        stateChanged = { toState = it },
+        stateChanged = { dispatch(TableIntent.SetFabExpanded(it == MultiFabState.EXPANDED)) },
         modifier = Modifier
             .align(Alignment.BottomEnd)
             .padding(end = 16.dp, bottom = 64.dp)
             .offset {
-                IntOffset(offsetX.roundToInt(), offsetY.roundToInt())
+                IntOffset(uiState.fabOffsetX.roundToInt(), uiState.fabOffsetY.roundToInt())
             }
             .draggable(
                 orientation = Orientation.Horizontal,
@@ -246,13 +312,10 @@ fun BoxScope.Button(onClick: (Long) -> Unit) {
             ),
     ) { item ->
         if (item.label == "Shuffle") {
-            shuffle()
-            onClick(1)
+            dispatch(TableIntent.Shuffle)
         }
         if (item.label == "Order") {
-            order()
-            onClick(0)
+            dispatch(TableIntent.Order)
         }
-        toState = MultiFabState.COLLAPSED
     }
 }

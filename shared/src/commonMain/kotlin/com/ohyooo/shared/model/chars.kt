@@ -66,18 +66,8 @@ val sonantRomaji = arrayOf(
 // length 50
 val sonant = arrayOf("が", "ぎ", "ぐ", "げ", "ご", "ざ", "じ", "ず", "ぜ", "ぞ", "だ", "ぢ", "づ", "で", "ど", "ば", "び", "ぶ", "べ", "ぼ", "ガ", "ギ", "グ", "ゲ", "ゴ", "ザ", "ジ", "ズ", "ゼ", "ゾ", "ダ", "ヂ", "ヅ", "デ", "ド", "バ", "ビ", "ブ", "ベ", "ボ", "ぱ", "ぴ", "ぷ", "ぺ", "ぽ", "パ", "ピ", "プ", "ペ", "ポ")
 
-val normalSequence = intArrayOf(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44)
-val sonantSequence = intArrayOf(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49)
-
-fun order() {
-    normalSequence.forEachIndexed { index, _ -> normalSequence[index] = index }
-    sonantSequence.forEachIndexed { index, _ -> sonantSequence[index] = index }
-}
-
-fun shuffle() {
-    normalSequence.shuffle()
-    sonantSequence.shuffle()
-}
+val normalSequence = List(45) { it }
+val sonantSequence = List(50) { it }
 
 private val hiraganaLineAa = arrayOf("あ", "え", "い", " ", "あ", "お", "う", " ", "あ", "え", "い", "う", "え", "お", "あ", "お", " ", "あ", "い", "う", "え", "お")
 private val hiraganaLineKa = arrayOf("か", "け", "き", " ", "か", "こ", "く", " ", "か", "け", "き", "く", "け", "こ", "か", "こ", " ", "か", "き", "く", "け", "こ")
