@@ -1,0 +1,179 @@
+name: Build all platforms
+
+on:
+  push:
+  pull_request:
+  repository_dispatch:
+  workflow_dispatch:
+  release:
+    types: [published]
+
+permissions:
+  contents: read
+
+jobs:
+  android:
+    name: Build Android
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout sources
+        uses: actions/checkout@v6
+        with:
+          submodules: recursive
+
+      - name: Set up JDK
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v6
+
+      - name: Build Debug and Release APKs
+        run: ./gradlew :android:assembleDebug :android:assembleRelease --stacktrace --no-configuration-cache
+
+      - name: Upload Android Debug
+        uses: actions/upload-artifact@v7
+        with:
+          name: JPSyllabary-android-debug
+          path: android/build/outputs/apk/debug/*.apk
+          if-no-files-found: error
+
+      - name: Upload Android Release
+        uses: actions/upload-artifact@v7
+        with:
+          name: JPSyllabary-android-release
+          path: android/build/outputs/apk/release/*.apk
+          if-no-files-found: error
+
+  desktop:
+    name: Build ${{ matrix.platform }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: Linux
+            os: ubuntu-latest
+            gradle: ./gradlew
+            format: deb
+            extension: deb
+            artifact: JPSyllabary-linux
+          - platform: Windows
+            os: windows-latest
+            gradle: ./gradlew.bat
+            format: exe
+            extension: exe
+            artifact: JPSyllabary-windows
+          - platform: macOS
+            os: macos-latest
+            gradle: ./gradlew
+            format: dmg
+            extension: dmg
+            artifact: JPSyllabary-macos
+
+    steps:
+      - name: Checkout sources
+        uses: actions/checkout@v6
+        with:
+          submodules: recursive
+
+      - name: Set up JDK
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v6
+
+      - name: Build Debug and Release packages
+        run: ${{ matrix.gradle }} :desktop:packageDistributionForCurrentOS :desktop:packageReleaseDistributionForCurrentOS --stacktrace --no-configuration-cache
+
+      - name: Upload ${{ matrix.platform }} Debug
+        uses: actions/upload-artifact@v7
+        with:
+          name: ${{ matrix.artifact }}-debug
+          path: desktop/build/compose/binaries/main/${{ matrix.format }}/*.${{ matrix.extension }}
+          if-no-files-found: error
+
+      - name: Upload ${{ matrix.platform }} Release
+        uses: actions/upload-artifact@v7
+        with:
+          name: ${{ matrix.artifact }}-release
+          path: desktop/build/compose/binaries/main-release/${{ matrix.format }}/*.${{ matrix.extension }}
+          if-no-files-found: error
+
+  web:
+    name: Build Web
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout sources
+        uses: actions/checkout@v6
+        with:
+          submodules: recursive
+
+      - name: Set up JDK
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v6
+
+      - name: Build Debug and Release distributions
+        run: ./gradlew :shared:wasmJsBrowserDevelopmentExecutableDistribution :shared:wasmJsBrowserDistribution --stacktrace --no-configuration-cache
+
+      - name: Upload Web Debug
+        uses: actions/upload-artifact@v7
+        with:
+          name: JPSyllabary-web-debug
+          path: shared/build/dist/wasmJs/developmentExecutable
+          if-no-files-found: error
+
+      - name: Upload Web Release
+        uses: actions/upload-artifact@v7
+        with:
+          name: JPSyllabary-web-release
+          path: shared/build/dist/wasmJs/productionExecutable
+          if-no-files-found: error
+
+  ios:
+    name: Build iOS
+    runs-on: macos-latest
+
+    steps:
+      - name: Checkout sources
+        uses: actions/checkout@v6
+        with:
+          submodules: recursive
+
+      - name: Set up JDK
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v6
+
+      - name: Build Debug and Release XCFrameworks
+        run: ./gradlew :shared:assembleSharedDebugXCFramework :shared:assembleSharedReleaseXCFramework --stacktrace --no-configuration-cache
+
+      - name: Upload iOS Debug
+        uses: actions/upload-artifact@v7
+        with:
+          name: JPSyllabary-ios-debug
+          path: shared/build/XCFrameworks/debug/Shared.xcframework
+          if-no-files-found: error
+
+      - name: Upload iOS Release
+        uses: actions/upload-artifact@v7
+        with:
+          name: JPSyllabary-ios-release
+          path: shared/build/XCFrameworks/release/Shared.xcframework
+          if-no-files-found: error
