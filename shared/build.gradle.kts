@@ -1,6 +1,7 @@
 @file:OptIn(org.jetbrains.kotlin.gradle.ExperimentalWasmDsl::class)
 
 import org.jetbrains.kotlin.gradle.targets.js.webpack.KotlinWebpackConfig
+import org.jetbrains.kotlin.gradle.plugin.mpp.apple.XCFramework
 
 plugins {
     alias(libs.plugins.kmm)
@@ -14,6 +15,8 @@ group = "com.ohyooo"
 version = "1.0.0"
 
 kotlin {
+    val sharedXcFramework = XCFramework("Shared")
+
     androidLibrary {
         namespace = "com.ohyooo.jpsyllabary.shared"
         compileSdk = libs.versions.compile.sdk.get().toInt()
@@ -32,6 +35,18 @@ kotlin {
         }
         androidResources{
             enable = true
+        }
+    }
+
+    listOf(
+        iosX64(),
+        iosArm64(),
+        iosSimulatorArm64(),
+    ).forEach { iosTarget ->
+        iosTarget.binaries.framework {
+            baseName = "Shared"
+            isStatic = true
+            sharedXcFramework.add(this)
         }
     }
 
