@@ -125,8 +125,11 @@ jobs:
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v6
 
-      - name: Build Debug and Release distributions
-        run: ./gradlew :shared:wasmJsBrowserDevelopmentExecutableDistribution :shared:wasmJsBrowserDistribution --stacktrace --no-configuration-cache
+      - name: Build Debug distribution
+        run: ./gradlew :shared:wasmJsBrowserDevelopmentExecutableDistribution --stacktrace --no-configuration-cache
+
+      - name: Build Release distribution
+        run: ./gradlew :shared:wasmJsBrowserDistribution --stacktrace --no-configuration-cache
 
       - name: Upload Web Debug
         uses: actions/upload-artifact@v7
