@@ -29,7 +29,7 @@ jobs:
           java-version: '21'
 
       - name: Set up Gradle
-        uses: gradle/actions/setup-gradle@v6.2.0
+        uses: gradle/actions/setup-gradle@v6.3.0
 
       - name: Build Debug and Release APKs
         run: ./gradlew :android:assembleDebug :android:assembleRelease --stacktrace --no-configuration-cache
@@ -87,7 +87,7 @@ jobs:
           java-version: '21'
 
       - name: Set up Gradle
-        uses: gradle/actions/setup-gradle@v6.2.0
+        uses: gradle/actions/setup-gradle@v6.3.0
 
       - name: Build Debug and Release packages
         run: ${{ matrix.gradle }} :desktop:packageDistributionForCurrentOS :desktop:packageReleaseDistributionForCurrentOS --stacktrace --no-configuration-cache
@@ -123,7 +123,7 @@ jobs:
           java-version: '21'
 
       - name: Set up Gradle
-        uses: gradle/actions/setup-gradle@v6.2.0
+        uses: gradle/actions/setup-gradle@v6.3.0
 
       - name: Build Debug distribution
         run: ./gradlew :shared:wasmJsBrowserDevelopmentExecutableDistribution --stacktrace --no-configuration-cache
@@ -162,7 +162,7 @@ jobs:
           java-version: '21'
 
       - name: Set up Gradle
-        uses: gradle/actions/setup-gradle@v6.2.0
+        uses: gradle/actions/setup-gradle@v6.3.0
 
       - name: Build Debug and Release XCFrameworks
         run: ./gradlew :shared:assembleSharedDebugXCFramework :shared:assembleSharedReleaseXCFramework --stacktrace --no-configuration-cache
