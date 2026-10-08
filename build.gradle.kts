@@ -37,7 +37,7 @@ allprojects {
                 listOf(
                     "-Xbackend-threads=4",
                     "-Xcontext-parameters", 
-                    "-jvm-target=21",
+                    "-jvm-target=25",
                     "-Xreturn-value-checker=full",
                     "-Xexplicit-backing-fields",
                 )
