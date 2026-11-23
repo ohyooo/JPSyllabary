@@ -4,7 +4,7 @@ target-sdk = "37"
 compile-sdk = "37"
 compile-minor = "2"
 
-agp = "9.5.1"
+agp = "9.5.2"
 kotlin = "2.4.21"
 workmanager = "2.8.1"
 serialization = "1.13.0"
@@ -15,7 +15,7 @@ compose = "1.11.4"
 compose-multiplatform = "1.12.2"
 compose-material3 = "1.9.0"
 compose-material-icons = "1.7.3"
-camerax = "1.6.1"
+camerax = "1.7.0"
 
 
 [plugins]
